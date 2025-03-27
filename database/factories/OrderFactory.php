@@ -22,6 +22,7 @@ class OrderFactory extends Factory
             'user_id' => fake()->numberBetween(1, 10),
             'status' => fake()->numberBetween(1, 2),
             'message' => fake()->text(255),
+            'name' => "",
         ];
     }
 }

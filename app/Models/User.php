@@ -13,9 +13,6 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-
-    protected static $is_admin = false;
-
     /**
      * The attributes that are mass assignable.
      *

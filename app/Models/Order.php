@@ -11,7 +11,7 @@ class Order extends Model
     /** @use HasFactory<\Database\Factories\OrderFactory> */
     use HasFactory;
 
-    protected $fillable = ['user_id', 'status', 'message', 'name']
+    protected $fillable = ['user_id', 'status', 'message', 'name'];
 
     public function user() : belongsTo
     {
