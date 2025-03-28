@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->bigInteger('user_id');
-            $table->boolean('status')->default(false);
-            $table->string('message')->nullable();;
+            $table->string('email');
+            $table->bigInteger('user_id')->nullable();
+            $table->enum('status', ['Active', 'Resolved'])->default('Active');
+            $table->string('message')->nullable();
+            $table->string('comment')->nullable();
             $table->timestamps();
             $table->charset('utf8mb4');
             $table->collation('utf8mb4_unicode_ci');

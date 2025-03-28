@@ -19,10 +19,12 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fake()->numberBetween(1, 10),
-            'status' => fake()->numberBetween(1, 2),
+//            'user_id' => fake()->numberBetween(1, 10),
+            'name' => fake()->unique()->name(),
+            'status' => 'Active',
+            'email' => fake()->unique()->safeEmail(),
             'message' => fake()->text(255),
-            'name' => "",
+            'comment' => null,
         ];
     }
 }
