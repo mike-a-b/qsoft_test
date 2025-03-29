@@ -7,6 +7,7 @@ use App\Enums\StatusEnum;
 use Illuminate\Http\Request;
 use App\Models\Order;
 //use App\Http\Resources\OrderResource;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CommentMail;
 
@@ -46,19 +47,21 @@ class OrderController extends Controller
         ]);
         $order = Order::query()->findOrFail($id);
 
-        if (isset($validated['comment']))
+        // проверка пользователя на возможность осуществления редактирования заявки и смены статуса
+        if (isset($validated['comment']) && isset($order))
         {
-            $validated['status'] = StatusEnum::Resolved;
-            $order->update($validated);
+            if (Gate::allows('edit-orders', $order))
+            {
+                $validated['status'] = StatusEnum::Resolved;
+                $order->update($validated);
+                $this->sendTestEmail($order->email);
+            } else {
+                abort(403);
+            }
         }
-
-        //        TODO: send email to user with comment and test it
-        $this->sendTestEmail($order->email);
-
         return redirect()->route('orders.index')
-                ->with('success', 'Была произведена отправка комментария пользователю,
+            ->with('success', 'Была произведена отправка комментария пользователю,
                 и заявке присвоен статус Resolved' );
-
     }
 
     public function sendTestEmail(string $mail_to) : string

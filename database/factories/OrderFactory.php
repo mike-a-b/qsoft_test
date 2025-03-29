@@ -20,7 +20,7 @@ class OrderFactory extends Factory
     {
         return [
 //            'user_id' => fake()->numberBetween(1, 10),
-            'name' => fake()->unique()->name(),
+            'name' => fake()->unique()->firstName(),
             'status' => 'Active',
             'email' => fake()->unique()->safeEmail(),
             'message' => fake()->text(255),
