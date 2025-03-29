@@ -8,14 +8,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/orders', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('main');
-
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-Route::middleware('auth')->group(callback: function () {
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-});
+Route::get('/orders', [OrderController::class, 'index'])->middleware(['auth', 'verified'])->name('orders.index');
+Route::put('/orders/{id}', [OrderController::class, 'answer'])->name('orders.answer');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
