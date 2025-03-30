@@ -14,9 +14,28 @@ use App\Mail\CommentMail;
 class OrderController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * @SWG\Get(
+     *     path="/orders",
+     *     summary="Get list of orders",
+     *     tags={"Orders"},
+     *     @SWG\Response(
+     *         response=200,
+     *         description="successful operation",
+     *         @SWG\Schema(
+     *             type="array",
+     *             @SWG\Items(ref="#/definitions/Post")
+     *         ),
+     *     ),
+     *     @SWG\Response(
+     *         response="401",
+     *         description="Unauthorized user",
+     *     ),
+     *     @SWG\Response(
+     *         response="403",
+     *         description="User havent grants to change ",
+     *     ),
+     * )
      */
-
     public function index()
     {
         $orders = Order::where('status', 'Active')->get();
@@ -25,7 +44,28 @@ class OrderController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * @SWG\Post(
+     *     path="/orders",
+     *     summary="Set status resolved and add comment by Id",
+     *     tags={"Orders"},
+     *     description="Set status resolved and add comment by Id",
+     *     @SWG\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Order id",
+     *         required=true,
+     *         type="integer",
+     *     ),
+     *     @SWG\Response(
+     *         response=200,
+     *         description="successful added order",
+     *         @SWG\Schema(ref="#/definitions/Post"),
+     *     ),
+     *     @SWG\Response(
+     *         response="403",
+     *         description="Unauthorized user",
+     *     )
+     * )
      */
     public function store(Request $request)
     {
@@ -40,6 +80,30 @@ class OrderController extends Controller
         return redirect()->route('home')->with('success', 'Ваша заявка создана');
     }
 
+    /**
+     * @SWG\Put(
+     *     path="/orders/{order_id}",
+     *     summary="Set status resolved and add comment by Id",
+     *     tags={"Orders"},
+     *     description="Set status resolved and add comment by Id",
+     *     @SWG\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Order id",
+     *         required=true,
+     *         type="integer",
+     *     ),
+     *     @SWG\Response(
+     *         response=200,
+     *         description="successful operation",
+     *         @SWG\Schema(ref="#/definitions/Order"),
+     *     ),
+     *     @SWG\Response(
+     *         response="403",
+     *         description="Unauthorized",
+     *     )
+     * )
+     */
     public function answer(Request $request, string $id)
     {
         $validated = $request->validate([
@@ -55,13 +119,12 @@ class OrderController extends Controller
                 $validated['status'] = StatusEnum::Resolved;
                 $order->update($validated);
                 $this->sendTestEmail($order->email);
+                return response('Комментарий добавлен, статус заказа установлек Resolved', 200);
             } else {
                 abort(403);
             }
         }
-        return redirect()->route('orders.index')
-            ->with('success', 'Была произведена отправка комментария пользователю,
-                и заявке присвоен статус Resolved' );
+        return redirect()->route('orders.index')->with('success', 'Была произведена отправка комментария пользователю и заявке присвоен статус Resolved' );
     }
 
     public function sendTestEmail(string $mail_to) : string
