@@ -4,70 +4,60 @@ namespace App\Http\Controllers;
 
 use App\Enums\StatusEnum;
 //use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Models\Order;
-//use App\Http\Resources\OrderResource;
+use App\Http\Resources\OrderResource;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CommentMail;
+use Illuminate\View\View;
 
+/**
+ * @OA\Info(
+ *     title="QSOFT test API",
+ *     version="1.0.0",
+ *     description="Документация API"
+ * )
+ */
 class OrderController extends Controller
 {
     /**
-     * @SWG\Get(
+     * @OA\Get(
      *     path="/orders",
-     *     summary="Get list of orders",
+     *     summary="Get user list",
      *     tags={"Orders"},
-     *     @SWG\Response(
-     *         response=200,
-     *         description="successful operation",
-     *         @SWG\Schema(
-     *             type="array",
-     *             @SWG\Items(ref="#/definitions/Post")
-     *         ),
-     *     ),
-     *     @SWG\Response(
-     *         response="401",
-     *         description="Unauthorized user",
-     *     ),
-     *     @SWG\Response(
-     *         response="403",
-     *         description="User havent grants to change ",
-     *     ),
+     *     @OA\Response(response=200, description="Success, redirect to order create"),
      * )
      */
-    public function index()
+    public function index() : View
     {
         $orders = Order::where('status', 'Active')->get();
         return view('orders.index', compact('orders'));
-//        return response()->json(OrderResource::collection(Order::all()), 200);
+//        return response()->json(OrderResource::collection($orders), 200);
     }
 
     /**
-     * @SWG\Post(
+     * @OA\Post(
      *     path="/orders",
-     *     summary="Set status resolved and add comment by Id",
+     *     summary="Create new order",
      *     tags={"Orders"},
-     *     description="Set status resolved and add comment by Id",
-     *     @SWG\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Order id",
-     *         required=true,
-     *         type="integer",
-     *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="successful added order",
-     *         @SWG\Schema(ref="#/definitions/Post"),
-     *     ),
-     *     @SWG\Response(
-     *         response="403",
-     *         description="Unauthorized user",
-     *     )
+     *          @OA\RequestBody(
+     *          required=true,
+     *          @OA\MediaType(
+     *              mediaType="application/x-www-form-urlencoded",
+     *              @OA\Schema(
+     *                  required={"name", "email", "message"},
+     *                  @OA\Property(property="name", type="string", example="user"),
+     *                  @OA\Property(property="email", type="string", example="user@example.com"),
+     *                  @OA\Property(property="message", type="string", example="some text")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Success, redirect to order create"),
      * )
      */
-    public function store(Request $request)
+    public function store(Request $request) : RedirectResponse
     {
         $validated = $request->validate([
             'name' =>  ['required', 'string', 'max:100', 'regex:/^[a-zA-Z]+$/u'],
@@ -81,29 +71,35 @@ class OrderController extends Controller
     }
 
     /**
-     * @SWG\Put(
-     *     path="/orders/{order_id}",
-     *     summary="Set status resolved and add comment by Id",
+     * @OA\Put(
+     *     path="/orders/{id}",
+     *     summary="Set comment",
+     *     description="Set status Resolved, and add to order comment",
      *     tags={"Orders"},
-     *     description="Set status resolved and add comment by Id",
-     *     @SWG\Parameter(
+     *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="Order id",
      *         required=true,
-     *         type="integer",
+     *         description="Order ID",
+     *         @OA\Schema(type="integer")
      *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="successful operation",
-     *         @SWG\Schema(ref="#/definitions/Order"),
+     *     @OA\RequestBody(
+     *          required=true,
+     *          @OA\MediaType(
+     *              mediaType="application/x-www-form-urlencoded",
+     *                  @OA\Schema(
+     *                          required={"comment"},
+     *                          @OA\Property(property="comment", type="string", example="order comment text"),
+     *                  )
+     *           )
      *     ),
-     *     @SWG\Response(
-     *         response="403",
-     *         description="Unauthorized",
+     *     @OA\Response(
+     *         response=302,
+     *         description="Sussecc operation"
      *     )
      * )
      */
+
     public function answer(Request $request, string $id)
     {
         $validated = $request->validate([
@@ -118,8 +114,7 @@ class OrderController extends Controller
             {
                 $validated['status'] = StatusEnum::Resolved;
                 $order->update($validated);
-                $this->sendTestEmail($order->email);
-                return response('Комментарий добавлен, статус заказа установлек Resolved', 200);
+                Mail::to($order->email)->send(new CommentMail($order->comment));
             } else {
                 abort(403);
             }

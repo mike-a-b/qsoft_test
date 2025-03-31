@@ -13,12 +13,14 @@ class CommentMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $content;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($content)
     {
-        //
+        $this->content = $content;
     }
 
     /**
@@ -53,7 +55,8 @@ class CommentMail extends Mailable
 
     public function build()
     {
-        return $this->subject('Тестовое письмо')
-            ->view('emails.comment');
+        return $this->subject('Комментарий на вашу заявку')
+            ->view('emails.comment')
+            ->with(['content' => $this->content]);
     }
 }
